@@ -8,16 +8,12 @@ function trann_train_psa_performance(varargin)
     dbn_name = varargin{6};
     verNet = varargin{7};
     component= varargin{8}; 
-    TransferLearning = varargin{9};
+    TransferLearning = varargin{9};    
     
-    
-    plot_set_up;
-    
-    TnC  = inp.vTn(1);
-    
+    plot_set_up;    
+    TnC  = inp.vTn(1);    
     xpl = cell(3,1);
-    ypl = cell(3,1);
-    
+    ypl = cell(3,1);    
     nT=length(tar.vTn(:));
     %% *DEFINE LIMITS*
     % _TRAINING SET_ 
@@ -25,9 +21,7 @@ function trann_train_psa_performance(varargin)
     ylm =  [-0.75;0.75];
     xtk =  0.00:0.25:1.00;
     ytk = -1.00:0.25:1.00;
-    
     xlm = [-0.05;1];
-    % cols = gray(6);
     
     %% *COMPUTE ERROR BARS*
     % _TRAINING SET_ 
@@ -37,63 +31,91 @@ function trann_train_psa_performance(varargin)
     xpl{4,1} = tar.vTn(:)./TnC;
     %
     %Perfomance plots
-     if strcmp(component,'h12')
-if strcmp(TransferLearning,'True')
-    ypl{2,1} = mean([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2}],1);
-    ypl{3,1} = mean([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2}],1);
-    ypl{4,1} = mean([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2}],1);
-    
-    err{2,1}(:,1) = prctile([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2}],16,1);
-    err{2,1}(:,2) = prctile([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2}],84,1);
+    if strcmp(component,'h12v')
+        if strcmp(TransferLearning,'True')
+            ypl{2,1} = mean([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2},ann.out_trn2.trn{1,3}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2},ann.out_tar2.trn{1,3}],1);
+            ypl{3,1} = mean([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2},ann.out_trn2.vld{1,3}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2},ann.out_tar2.vld{1,3}],1);
+            ypl{4,1} = mean([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2},ann.out_trn2.tst{1,3}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2},ann.out_tar2.tst{1,3}],1);
 
-    err{3,1}(:,1) = prctile([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2}],16,1);
-    err{3,1}(:,2) = prctile([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2}],84,1);
-    
-    err{4,1}(:,1) = prctile([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2}],16,1);
-    err{4,1}(:,2) = prctile([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2}],84,1); 
-else
-    ypl{2,1} = mean([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2}],1);
-    ypl{3,1} = mean([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2}],1);
-    ypl{4,1} = mean([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2}],1);
-    
-    err{2,1}(:,1) = prctile([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2}],16,1);
-    err{2,1}(:,2) = prctile([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2}],84,1);
+            err{2,1}(:,1) = prctile([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2},ann.out_trn2.trn{1,3}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2},ann.out_tar2.trn{1,3}],16,1);
+            err{2,1}(:,2) = prctile([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2},ann.out_trn2.trn{1,3}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2},ann.out_tar2.trn{1,3}],84,1);
 
-    err{3,1}(:,1) = prctile([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2}],16,1);
-    err{3,1}(:,2) = prctile([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2}],84,1);
-    
-    err{4,1}(:,1) = prctile([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2}],16,1);
-    err{4,1}(:,2) = prctile([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2}],84,1); 
-end
-     else %not h12
-if strcmp(TransferLearning,'True')
-    ypl{2,1} = mean([ann.out_trn2.trn{1,1}]-[ann.out_tar2.trn{1,1}],1);
-    ypl{3,1} = mean([ann.out_trn2.vld{1,1}]-[ann.out_tar2.vld{1,1}],1);
-    ypl{4,1} = mean([ann.out_trn2.tst{1,1}]-[ann.out_tar2.tst{1,1}],1);
-    
-    err{2,1}(:,1) = prctile([ann.out_trn2.trn{1,1}]-[ann.out_tar2.trn{1,1}],16,1);
-    err{2,1}(:,2) = prctile([ann.out_trn2.trn{1,1}]-[ann.out_tar2.trn{1,1}],84,1);
+            err{3,1}(:,1) = prctile([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2},ann.out_trn2.vld{1,3}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2},ann.out_tar2.vld{1,3}],16,1);
+            err{3,1}(:,2) = prctile([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2},ann.out_trn2.vld{1,3}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2},ann.out_tar2.vld{1,3}],84,1);
 
-    err{3,1}(:,1) = prctile([ann.out_trn2.vld{1,1}]-[ann.out_tar2.vld{1,1}],16,1);
-    err{3,1}(:,2) = prctile([ann.out_trn2.vld{1,1}]-[ann.out_tar2.vld{1,1}],84,1);
-    
-    err{4,1}(:,1) = prctile([ann.out_trn2.tst{1,1}]-[ann.out_tar2.tst{1,1}],16,1);
-    err{4,1}(:,2) = prctile([ann.out_trn2.tst{1,1}]-[ann.out_tar2.tst{1,1}],84,1); 
-else
-    ypl{2,1} = mean([ann.out_trn.trn{1,1}]-[ann.out_tar.trn{1,1}],1);
-    ypl{3,1} = mean([ann.out_trn.vld{1,1}]-[ann.out_tar.vld{1,1}],1);
-    ypl{4,1} = mean([ann.out_trn.tst{1,1}]-[ann.out_tar.tst{1,1}],1);
-    
-    err{2,1}(:,1) = prctile([ann.out_trn.trn{1,1}]-[ann.out_tar.trn{1,1}],16,1);
-    err{2,1}(:,2) = prctile([ann.out_trn.trn{1,1}]-[ann.out_tar.trn{1,1}],84,1);
+            err{4,1}(:,1) = prctile([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2},ann.out_trn2.tst{1,3}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2},ann.out_tar2.tst{1,3}],16,1);
+            err{4,1}(:,2) = prctile([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2},ann.out_trn2.tst{1,3}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2},ann.out_tar2.tst{1,3}],84,1);
+        else
+           ypl{2,1} = mean([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2},ann.out_trn.trn{1,3}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2},ann.out_tar.trn{1,3}],1);
+            ypl{3,1} = mean([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2},ann.out_trn.vld{1,3}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2},ann.out_tar.vld{1,3}],1);
+            ypl{4,1} = mean([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2},ann.out_trn.tst{1,3}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2},ann.out_tar.tst{1,3}],1);
 
-    err{3,1}(:,1) = prctile([ann.out_trn.vld{1,1}]-[ann.out_tar.vld{1,1}],16,1);
-    err{3,1}(:,2) = prctile([ann.out_trn.vld{1,1}]-[ann.out_tar.vld{1,1}],84,1);
-    
-    err{4,1}(:,1) = prctile([ann.out_trn.tst{1,1}]-[ann.out_tar.tst{1,1}],16,1);
-    err{4,1}(:,2) = prctile([ann.out_trn.tst{1,1}]-[ann.out_tar.tst{1,1}],84,1); 
-end
-     end
+            err{2,1}(:,1) = prctile([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2},ann.out_trn.trn{1,3}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2},ann.out_tar.trn{1,3}],16,1);
+            err{2,1}(:,2) = prctile([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2},ann.out_trn.trn{1,3}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2},ann.out_tar.trn{1,3}],84,1);
+
+            err{3,1}(:,1) = prctile([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2},ann.out_trn.vld{1,3}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2},ann.out_tar.vld{1,3}],16,1);
+            err{3,1}(:,2) = prctile([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2},ann.out_trn.vld{1,3}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2},ann.out_tar.vld{1,3}],84,1);
+
+            err{4,1}(:,1) = prctile([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2},ann.out_trn.tst{1,3}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2},ann.out_tar.tst{1,3}],16,1);
+            err{4,1}(:,2) = prctile([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2},ann.out_trn.tst{1,3}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2},ann.out_tar.tst{1,3}],84,1);
+        end
+    elseif strcmp(component,'h12')
+        if strcmp(TransferLearning,'True')
+            ypl{2,1} = mean([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2}],1);
+            ypl{3,1} = mean([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2}],1);
+            ypl{4,1} = mean([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2}],1);
+
+            err{2,1}(:,1) = prctile([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2}],16,1);
+            err{2,1}(:,2) = prctile([ann.out_trn2.trn{1,1},ann.out_trn2.trn{1,2}]-[ann.out_tar2.trn{1,1},ann.out_tar2.trn{1,2}],84,1);
+
+            err{3,1}(:,1) = prctile([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2}],16,1);
+            err{3,1}(:,2) = prctile([ann.out_trn2.vld{1,1},ann.out_trn2.vld{1,2}]-[ann.out_tar2.vld{1,1},ann.out_tar2.vld{1,2}],84,1);
+
+            err{4,1}(:,1) = prctile([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2}],16,1);
+            err{4,1}(:,2) = prctile([ann.out_trn2.tst{1,1},ann.out_trn2.tst{1,2}]-[ann.out_tar2.tst{1,1},ann.out_tar2.tst{1,2}],84,1);
+        else
+            ypl{2,1} = mean([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2}],1);
+            ypl{3,1} = mean([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2}],1);
+            ypl{4,1} = mean([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2}],1);
+
+            err{2,1}(:,1) = prctile([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2}],16,1);
+            err{2,1}(:,2) = prctile([ann.out_trn.trn{1,1},ann.out_trn.trn{1,2}]-[ann.out_tar.trn{1,1},ann.out_tar.trn{1,2}],84,1);
+
+            err{3,1}(:,1) = prctile([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2}],16,1);
+            err{3,1}(:,2) = prctile([ann.out_trn.vld{1,1},ann.out_trn.vld{1,2}]-[ann.out_tar.vld{1,1},ann.out_tar.vld{1,2}],84,1);
+
+            err{4,1}(:,1) = prctile([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2}],16,1);
+            err{4,1}(:,2) = prctile([ann.out_trn.tst{1,1},ann.out_trn.tst{1,2}]-[ann.out_tar.tst{1,1},ann.out_tar.tst{1,2}],84,1);
+        end
+    else %not h12
+        if strcmp(TransferLearning,'True')
+            ypl{2,1} = mean([ann.out_trn2.trn{1,1}]-[ann.out_tar2.trn{1,1}],1);
+            ypl{3,1} = mean([ann.out_trn2.vld{1,1}]-[ann.out_tar2.vld{1,1}],1);
+            ypl{4,1} = mean([ann.out_trn2.tst{1,1}]-[ann.out_tar2.tst{1,1}],1);
+
+            err{2,1}(:,1) = prctile([ann.out_trn2.trn{1,1}]-[ann.out_tar2.trn{1,1}],16,1);
+            err{2,1}(:,2) = prctile([ann.out_trn2.trn{1,1}]-[ann.out_tar2.trn{1,1}],84,1);
+
+            err{3,1}(:,1) = prctile([ann.out_trn2.vld{1,1}]-[ann.out_tar2.vld{1,1}],16,1);
+            err{3,1}(:,2) = prctile([ann.out_trn2.vld{1,1}]-[ann.out_tar2.vld{1,1}],84,1);
+
+            err{4,1}(:,1) = prctile([ann.out_trn2.tst{1,1}]-[ann.out_tar2.tst{1,1}],16,1);
+            err{4,1}(:,2) = prctile([ann.out_trn2.tst{1,1}]-[ann.out_tar2.tst{1,1}],84,1);
+        else
+            ypl{2,1} = mean([ann.out_trn.trn{1,1}]-[ann.out_tar.trn{1,1}],1);
+            ypl{3,1} = mean([ann.out_trn.vld{1,1}]-[ann.out_tar.vld{1,1}],1);
+            ypl{4,1} = mean([ann.out_trn.tst{1,1}]-[ann.out_tar.tst{1,1}],1);
+
+            err{2,1}(:,1) = prctile([ann.out_trn.trn{1,1}]-[ann.out_tar.trn{1,1}],16,1);
+            err{2,1}(:,2) = prctile([ann.out_trn.trn{1,1}]-[ann.out_tar.trn{1,1}],84,1);
+
+            err{3,1}(:,1) = prctile([ann.out_trn.vld{1,1}]-[ann.out_tar.vld{1,1}],16,1);
+            err{3,1}(:,2) = prctile([ann.out_trn.vld{1,1}]-[ann.out_tar.vld{1,1}],84,1);
+
+            err{4,1}(:,1) = prctile([ann.out_trn.tst{1,1}]-[ann.out_tar.tst{1,1}],16,1);
+            err{4,1}(:,2) = prctile([ann.out_trn.tst{1,1}]-[ann.out_tar.tst{1,1}],84,1);
+        end
+    end
     
     figure('position',[0,0,13,10]);
     
@@ -146,8 +168,7 @@ end
         'interpreter','latex','fontsize',18)
     rule_fig(gcf);
     
-    saveas(gcf,fullfile(wd,strcat(dsg.fnm,'_',num2str(dsg.nhn),'n_',['TRN',num2str(dsg.net.divideParam.trainRatio*100),'VAL',num2str(dsg.net.divideParam.valRatio*100),'TES',num2str(dsg.net.divideParam.testRatio*100)],dbn_name,'_',verNet)),'jpeg');
-%     saveas(gcf,fullfile(wd,strcat(dsg.fnm,'_bst_lSa_all_',num2str(dsg.nhn),'n')),'epsc');
- 
+    saveas(gcf,fullfile(wd,strcat(dsg.fnm,'_',['TRN',num2str(dsg.net.divideParam.trainRatio*100),'VAL',num2str(dsg.net.divideParam.valRatio*100),'TES',num2str(dsg.net.divideParam.testRatio*100)],dbn_name,'_',verNet)),'jpeg'); 
+    close(gcf);
     return
 end

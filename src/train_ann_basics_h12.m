@@ -39,6 +39,13 @@ if strcmp(add_lndistance,'True')
     iextra=iextra+1;
 end
 
+n_first_level=ann.nhn(1);
+if strcmp(component,'h12v')
+    n_common=3*ann.nhn(2);
+elseif strcmp(component,'h12')
+    n_common=2*ann.nhn(2);
+end
+
 %% *CREATE BASE NETWORK (MLP)*
 % ANN name
 dsg.fnm = sprintf('net_%u_%s_%s_%s',round(ann.TnC*100),ann.scl,ann.cp);
@@ -67,69 +74,78 @@ if strcmp(TransferLearning,'True')
     end
 end
 
-if strcmp(component,'h12')
+if strcmp(component,'h12v')
+    branches=3;
+elseif strcmp(component,'h12')
     branches=2;
 else
     branches=1;
 end
 %branch 1
 input1=featureInputLayer(NoInputs,"Normalization","zscore",Name="input1");
-Branch1 = [input1,fullyConnectedLayer(20, 'Name', 'fc_1'),...
+Branch1 = [input1,fullyConnectedLayer(n_first_level, 'Name', 'fc_1'),...
     tanhLayer('Name', 'tanh_1')];
 
-%branch 2
-if strcmp(component,'h12')
+%branches 2 & 5
+if strcmp(component,'h12v')
     input2=featureInputLayer(NoInputs,"Normalization","zscore",Name="input2");
-    Branch2 = [input2,fullyConnectedLayer(20, 'Name', 'fc_2'),...
-        tanhLayer('Name', 'tanh_2')];
+    Branch2 = [input2,fullyConnectedLayer(n_first_level, 'Name', 'fc_2'),...
+    tanhLayer('Name', 'tanh_2')];
+
+    input5=featureInputLayer(NoInputs,"Normalization","zscore",Name="input5");
+    Branch5 = [input5,fullyConnectedLayer(n_first_level, 'Name', 'fc_5'),...
+    tanhLayer('Name', 'tanh_5')];
+%branch 2
+elseif strcmp(component,'h12')
+    input2=featureInputLayer(NoInputs,"Normalization","zscore",Name="input2");
+    Branch2 = [input2,fullyConnectedLayer(n_first_level, 'Name', 'fc_2'),...
+    tanhLayer('Name', 'tanh_2')];
 end
 
 if iextra>0
     %branch 3
     input3=featureInputLayer(iextra,"Normalization","zscore",Name="input3");
     extraBranch = [input3,fullyConnectedLayer(iextra*2, 'Name', 'fc_3'),...
-        tanhLayer('Name', 'tanh_3')];
+    tanhLayer('Name', 'tanh_3')];
     branches=branches+1;
 end
 
 if n_classes>0
     catInput = featureInputLayer(4, 'Name', 'categoryInput');
     catBranch = [ catInput,fullyConnectedLayer(5, 'Name', 'input4'),...
-        reluLayer('Name', 'cat_relu1')];
+     reluLayer('Name', 'cat_relu1')];
     branches=branches+1;
 end
 
 %shared
-
-
-if strcmp(component,'h12')
+if strcmp(component,'h12') | strcmp(component,'h12v')
     concat=concatenationLayer(1,branches,Name="concat");
-    % shared = [fullyConnectedLayer(30, 'Name', 'fc_shared1'),...
-    % tanhLayer('Name', 'tanh_shared1'),fullyConnectedLayer(30, 'Name', 'fc_shared2'),...
-    %         tanhLayer('Name', 'tanh_shared2')];
-    shared = [fullyConnectedLayer(40, 'Name', 'fc_shared1'),...
-        tanhLayer('Name', 'tanh_shared1')];
+    shared = [fullyConnectedLayer(n_common, 'Name', 'fc_shared1'),...
+    tanhLayer('Name', 'tanh_shared1')];
 elseif branches>1
     concat=concatenationLayer(1,branches,Name="concat");
-    % shared = [fullyConnectedLayer(20, 'Name', 'fc_shared1'),...
-    % tanhLayer('Name', 'tanh_shared1'),fullyConnectedLayer(25, 'Name', 'fc_shared2'),...
-    %         tanhLayer('Name', 'tanh_shared2')];
-    shared = [fullyConnectedLayer(20, 'Name', 'fc_shared1'),...
-        tanhLayer('Name', 'tanh_shared1')];
+    shared = [fullyConnectedLayer(n_first_level, 'Name', 'fc_shared1'),...
+    tanhLayer('Name', 'tanh_shared1')];
 else
-    shared = [fullyConnectedLayer(20, 'Name', 'fc_shared1'),...
-        tanhLayer('Name', 'tanh_shared1')];
+    shared = [fullyConnectedLayer(n_first_level, 'Name', 'fc_shared1'),...
+    tanhLayer('Name', 'tanh_shared1')];
 end
 
 % Outputs
 output1 = fullyConnectedLayer(NoOutputs, 'Name', 'output1');
-if strcmp(component,'h12')
+if strcmp(component,'h12v')
+    output2 = fullyConnectedLayer(NoOutputs, 'Name', 'output2');
+    output3 = fullyConnectedLayer(NoOutputs, 'Name', 'output3');
+elseif strcmp(component,'h12')
     output2 = fullyConnectedLayer(NoOutputs, 'Name', 'output2');
 end
 
 layers = dlnetwork;
 layers = addLayers(layers, Branch1);
-if strcmp(component,'h12')
+if strcmp(component,'h12v')
+    layers = addLayers(layers, Branch2);
+    layers = addLayers(layers, Branch5);
+elseif strcmp(component,'h12')
     layers = addLayers(layers, Branch2);
 end
 if iextra>0
@@ -145,10 +161,27 @@ layers = addLayers(layers, shared);
 layers = addLayers(layers, output1);
 if strcmp(component,'h12')
     layers = addLayers(layers, output2);
+elseif strcmp(component,'h12v')
+    layers = addLayers(layers, output2);
+    layers = addLayers(layers, output3);
 end
 
 % Connect branches
-if strcmp(component,'h12')
+if strcmp(component,'h12v')
+    layers = connectLayers(layers, 'tanh_1', 'concat/in1');
+    layers = connectLayers(layers, 'tanh_2', 'concat/in2');
+    layers = connectLayers(layers, 'tanh_5', 'concat/in3');
+    if iextra>0
+        layers = connectLayers(layers, 'tanh_3', 'concat/in4');
+    end
+    if n_classes>0
+        layers = connectLayers(layers, 'cat_relu1', 'concat/in5');
+    end
+    layers = connectLayers(layers, 'concat', 'fc_shared1');
+    layers = connectLayers(layers, 'tanh_shared1', 'output1');
+    layers = connectLayers(layers, 'tanh_shared1', 'output2');
+    layers = connectLayers(layers, 'tanh_shared1', 'output3');
+elseif strcmp(component,'h12')
     layers = connectLayers(layers, 'tanh_1', 'concat/in1');
     layers = connectLayers(layers, 'tanh_2', 'concat/in2');
     if iextra>0

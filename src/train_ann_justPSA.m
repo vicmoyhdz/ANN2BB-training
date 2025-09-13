@@ -35,7 +35,7 @@ function train_ann_justPSA(varargin)
     db = load(ann.dbn);
     db.nr  = size(db.SIMBAD,2);
 
-    db.vTn = [0;0.01;0.025;0.04;0.05;0.07;(0.1:0.05:0.5)';0.6;0.7;0.75;0.8;0.9;(1:0.2:2)';(2.5:0.5:5)';(6:1:10)'];
+    db.vTn = varargin{11};
     db.nT  = numel(db.vTn);
 
     % _define input/target natural periods_
@@ -83,6 +83,13 @@ function train_ann_justPSA(varargin)
     % PSA2 = -999*ones(db2.nr,db2.nT);
     
     switch ann.cp
+        % _Three COMPONENTS (separate branches)
+        case {'h12v'}
+            for j_ = 1:db.nr
+                PSA_1(j_,:) = db.simbad(j_).psa_h1(:)';
+                PSA_2(j_,:) = db.simbad(j_).psa_h2(:)';
+                PSA_3(j_,:) = db.simbad(j_).psa_v(:)';
+            end
         % _BOTH HORIZONTAL COMPONENTS (separate branches)
         case {'h12'}
             for j_ = 1:db.nr
@@ -138,6 +145,9 @@ function train_ann_justPSA(varargin)
 
         inp.simbad_2  = -999*ones(inp.nT,db.nr);
         tar.simbad_2 = -999*ones(tar.nT,db.nr);
+
+        inp.simbad_5  = -999*ones(inp.nT,db.nr);
+        tar.simbad_5 = -999*ones(tar.nT,db.nr);
     else
         inp.simbad_1  = -999*ones(inp.nT,db.nr);
         tar.simbad_1  = -999*ones(tar.nT,db.nr);
@@ -145,15 +155,21 @@ function train_ann_justPSA(varargin)
 
     for i_=1:inp.nT
           inp.simbad_1(i_,1:db.nr) = log10(PSA_1(1:db.nr,inp.idx(i_))./100)';
-               if strcmp(ann.cp,'h12')
+          if strcmp(ann.cp,'h12v')
              inp.simbad_2(i_,1:db.nr) = log10(PSA_2(1:db.nr,inp.idx(i_))./100)';
-               end
+             inp.simbad_5(i_,1:db.nr) = log10(PSA_3(1:db.nr,inp.idx(i_))./100)';
+          elseif strcmp(ann.cp,'h12')
+             inp.simbad_2(i_,1:db.nr) = log10(PSA_2(1:db.nr,inp.idx(i_))./100)';
+          end
     end
 
     for i_=1:tar.nT
           tar.simbad_1(i_,1:db.nr) = log10(PSA_1(1:db.nr,tar.idx(i_))./100)';
-          if strcmp(ann.cp,'h12')
-         tar.simbad_2(i_,1:db.nr) = log10(PSA_2(1:db.nr,tar.idx(i_))./100)';
+          if strcmp(ann.cp,'h12v')
+             tar.simbad_2(i_,1:db.nr) = log10(PSA_2(1:db.nr,tar.idx(i_))./100)';
+             tar.simbad_3(i_,1:db.nr) = log10(PSA_3(1:db.nr,tar.idx(i_))./100)';
+          elseif strcmp(ann.cp,'h12')
+             tar.simbad_2(i_,1:db.nr) = log10(PSA_2(1:db.nr,tar.idx(i_))./100)';
           end
     end
 
@@ -208,7 +224,6 @@ function train_ann_justPSA(varargin)
     %% *DESIGN BASIC ANN*
     
     dsg.ntr=n_LoopsANN;   
-    % dsg.train_strategy=ann.train_strategy;
     NNs = cell(dsg.ntr,1);
     prf.vld = -999*ones(dsg.ntr,1);
     out.prf = 0.0;
@@ -220,10 +235,87 @@ function train_ann_justPSA(varargin)
                 fprintf('ANN %u/%u: \n',i_,dsg.ntr);
                 %% *DEFINE INPUTS/TARGETS*
                 % _ALL INPUT/TARGET TRAINING VALUES_
+if strcmp(ann.cp,'h12v')
+            if index_extra>0 && n_classes>0
+                NNs{i_}.inp.trn = {inp.simbad_1(:,dsg.idx.trn)',inp.simbad_2(:,dsg.idx.trn)',inp.simbad_5(:,dsg.idx.trn)',inp.simbad_3(:,dsg.idx.trn)',inp.simbad_4(:,dsg.idx.trn)'};
+                NNs{i_}.tar.trn = {tar.simbad_1(:,dsg.idx.trn)',tar.simbad_2(:,dsg.idx.trn)',tar.simbad_3(:,dsg.idx.trn)'};          
+                NNs{i_}.inp.vld = {inp.simbad_1(:,dsg.idx.vld)',inp.simbad_2(:,dsg.idx.vld)',inp.simbad_5(:,dsg.idx.vld)',inp.simbad_3(:,dsg.idx.vld)',inp.simbad_4(:,dsg.idx.vld)'};
+                NNs{i_}.tar.vld = {tar.simbad_1(:,dsg.idx.vld)',tar.simbad_2(:,dsg.idx.vld)',tar.simbad_3(:,dsg.idx.vld)'};            
+                NNs{i_}.inp.tst = {inp.simbad_1(:,dsg.idx.tst)',inp.simbad_2(:,dsg.idx.tst)',inp.simbad_5(:,dsg.idx.tst)',inp.simbad_3(:,dsg.idx.tst)',inp.simbad_4(:,dsg.idx.tst)'};
+                NNs{i_}.tar.tst = {tar.simbad_1(:,dsg.idx.tst)',tar.simbad_2(:,dsg.idx.tst)',tar.simbad_3(:,dsg.idx.tst)'};
 
-                 % NNs{i_}.train_strategy = ann.train_strategy;
+                dsX1Trn_1 = arrayDatastore(inp.simbad_1(:,dsg.idx.trn)');
+                dsX1Trn_2 = arrayDatastore(inp.simbad_2(:,dsg.idx.trn)');
+                dsX1Trn_5 = arrayDatastore(inp.simbad_5(:,dsg.idx.trn)');
+                dsX1Trn_3 = arrayDatastore(inp.simbad_3(:,dsg.idx.trn)');
+                dsX1Trn_4 = arrayDatastore(inp.simbad_4(:,dsg.idx.trn)');
+                dsT1Trn_1 = arrayDatastore(tar.simbad_1(:,dsg.idx.trn)');
+                dsT1Trn_2 = arrayDatastore(tar.simbad_2(:,dsg.idx.trn)');
+                dsT1Trn_3 = arrayDatastore(tar.simbad_3(:,dsg.idx.trn)');
+                dsTrn1 = combine(dsX1Trn_1,dsX1Trn_2,dsX1Trn_5,dsX1Trn_3,dsX1Trn_4,dsT1Trn_1,dsT1Trn_2,dsT1Trn_3);
 
-      if strcmp(ann.cp,'h12')
+                dsX1vld_1 = arrayDatastore(inp.simbad_1(:,dsg.idx.vld)');
+                dsX1vld_2 = arrayDatastore(inp.simbad_2(:,dsg.idx.vld)');
+                dsX1vld_5 = arrayDatastore(inp.simbad_5(:,dsg.idx.vld)');
+                dsX1vld_3 = arrayDatastore(inp.simbad_3(:,dsg.idx.vld)');
+                dsX1vld_4 = arrayDatastore(inp.simbad_4(:,dsg.idx.vld)');
+                dsT1vld_1 = arrayDatastore(tar.simbad_1(:,dsg.idx.vld)');
+                dsT1vld_2 = arrayDatastore(tar.simbad_2(:,dsg.idx.vld)');
+                dsT1vld_3 = arrayDatastore(tar.simbad_3(:,dsg.idx.vld)');
+                dsVld1= combine(dsX1vld_1,dsX1vld_2,dsX1vld_5,dsX1vld_3,dsX1vld_4,dsT1vld_1,dsT1vld_2,dsT1vld_3);  
+
+          elseif (index_extra>0) && (n_classes==0)
+                NNs{i_}.inp.trn = {inp.simbad_1(:,dsg.idx.trn)',inp.simbad_2(:,dsg.idx.trn)',inp.simbad_5(:,dsg.idx.trn)',inp.simbad_3(:,dsg.idx.trn)'};
+                NNs{i_}.tar.trn = {tar.simbad_1(:,dsg.idx.trn)',tar.simbad_2(:,dsg.idx.trn)',tar.simbad_3(:,dsg.idx.trn)'};          
+                NNs{i_}.inp.vld = {inp.simbad_1(:,dsg.idx.vld)',inp.simbad_2(:,dsg.idx.vld)',inp.simbad_5(:,dsg.idx.vld)',inp.simbad_3(:,dsg.idx.vld)'};
+                NNs{i_}.tar.vld = {tar.simbad_1(:,dsg.idx.vld)',tar.simbad_2(:,dsg.idx.vld)',tar.simbad_3(:,dsg.idx.vld)'};            
+                NNs{i_}.inp.tst = {inp.simbad_1(:,dsg.idx.tst)',inp.simbad_2(:,dsg.idx.tst)',inp.simbad_5(:,dsg.idx.tst)',inp.simbad_3(:,dsg.idx.tst)'};
+                NNs{i_}.tar.tst = {tar.simbad_1(:,dsg.idx.tst)',tar.simbad_2(:,dsg.idx.tst)',tar.simbad_3(:,dsg.idx.tst)'};
+
+                dsX1Trn_1 = arrayDatastore(inp.simbad_1(:,dsg.idx.trn)');
+                dsX1Trn_2 = arrayDatastore(inp.simbad_2(:,dsg.idx.trn)');
+                dsX1Trn_5 = arrayDatastore(inp.simbad_5(:,dsg.idx.trn)');
+                dsX1Trn_3 = arrayDatastore(inp.simbad_3(:,dsg.idx.trn)');
+                dsT1Trn_1 = arrayDatastore(tar.simbad_1(:,dsg.idx.trn)');
+                dsT1Trn_2 = arrayDatastore(tar.simbad_2(:,dsg.idx.trn)');
+                dsT1Trn_3 = arrayDatastore(tar.simbad_3(:,dsg.idx.trn)');
+                dsTrn1 = combine(dsX1Trn_1,dsX1Trn_2,dsX1Trn_5,dsX1Trn_3,dsT1Trn_1,dsT1Trn_2,dsT1Trn_3);
+
+                dsX1vld_1 = arrayDatastore(inp.simbad_1(:,dsg.idx.vld)');
+                dsX1vld_2 = arrayDatastore(inp.simbad_2(:,dsg.idx.vld)');
+                dsX1vld_5 = arrayDatastore(inp.simbad_5(:,dsg.idx.vld)');
+                dsX1vld_3 = arrayDatastore(inp.simbad_3(:,dsg.idx.vld)');
+                dsT1vld_1 = arrayDatastore(tar.simbad_1(:,dsg.idx.vld)');
+                dsT1vld_2 = arrayDatastore(tar.simbad_2(:,dsg.idx.vld)');
+                dsT1vld_3 = arrayDatastore(tar.simbad_3(:,dsg.idx.vld)');
+                dsVld1= combine(dsX1vld_1,dsX1vld_2,dsX1vld_5,dsX1vld_3,dsT1vld_1,dsT1vld_2,dsT1vld_3);  
+
+          else 
+                NNs{i_}.inp.trn = {inp.simbad_1(:,dsg.idx.trn)',inp.simbad_2(:,dsg.idx.trn)',inp.simbad_5(:,dsg.idx.trn)'};
+                NNs{i_}.tar.trn = {tar.simbad_1(:,dsg.idx.trn)',tar.simbad_2(:,dsg.idx.trn)',tar.simbad_3(:,dsg.idx.trn)'};          
+                NNs{i_}.inp.vld = {inp.simbad_1(:,dsg.idx.vld)',inp.simbad_2(:,dsg.idx.vld)',inp.simbad_5(:,dsg.idx.vld)'};
+                NNs{i_}.tar.vld = {tar.simbad_1(:,dsg.idx.vld)',tar.simbad_2(:,dsg.idx.vld)',tar.simbad_3(:,dsg.idx.vld)'};            
+                NNs{i_}.inp.tst = {inp.simbad_1(:,dsg.idx.tst)',inp.simbad_2(:,dsg.idx.tst)',inp.simbad_5(:,dsg.idx.tst)'};
+                NNs{i_}.tar.tst = {tar.simbad_1(:,dsg.idx.tst)',tar.simbad_2(:,dsg.idx.tst)',tar.simbad_3(:,dsg.idx.tst)'};
+
+                dsX1Trn_1 = arrayDatastore(inp.simbad_1(:,dsg.idx.trn)');
+                dsX1Trn_2 = arrayDatastore(inp.simbad_2(:,dsg.idx.trn)');
+                dsX1Trn_5 = arrayDatastore(inp.simbad_5(:,dsg.idx.trn)');
+                dsT1Trn_1 = arrayDatastore(tar.simbad_1(:,dsg.idx.trn)');
+                dsT1Trn_2 = arrayDatastore(tar.simbad_2(:,dsg.idx.trn)');
+                dsT1Trn_3 = arrayDatastore(tar.simbad_3(:,dsg.idx.trn)');
+                dsTrn1 = combine(dsX1Trn_1,dsX1Trn_2,dsX1Trn_5,dsT1Trn_1,dsT1Trn_2,dsT1Trn_3);
+
+                dsX1vld_1 = arrayDatastore(inp.simbad_1(:,dsg.idx.vld)');
+                dsX1vld_2 = arrayDatastore(inp.simbad_2(:,dsg.idx.vld)');
+                dsX1vld_5 = arrayDatastore(inp.simbad_5(:,dsg.idx.vld)');
+                dsT1vld_1 = arrayDatastore(tar.simbad_1(:,dsg.idx.vld)');
+                dsT1vld_2 = arrayDatastore(tar.simbad_2(:,dsg.idx.vld)');
+                dsT1vld_3 = arrayDatastore(tar.simbad_3(:,dsg.idx.vld)');
+                dsVld1= combine(dsX1vld_1,dsX1vld_2,dsX1vld_5,dsT1vld_1,dsT1vld_2,dsT1vld_3);  
+
+            end
+elseif strcmp(ann.cp,'h12')
           if index_extra>0 && n_classes>0
                 NNs{i_}.inp.trn = {inp.simbad_1(:,dsg.idx.trn)',inp.simbad_2(:,dsg.idx.trn)',inp.simbad_3(:,dsg.idx.trn)',inp.simbad_4(:,dsg.idx.trn)'};
                 NNs{i_}.tar.trn = {tar.simbad_1(:,dsg.idx.trn)',tar.simbad_2(:,dsg.idx.trn)'};          
@@ -370,7 +462,9 @@ function train_ann_justPSA(varargin)
                 %     train(NNs{i_}.inp.trn,NNs{i_}.tar.trn,layers,options);
 
                 % analyzeNetwork(layers)
-     if strcmp(ann.cp,'h12')
+    if strcmp(ann.cp,'h12v')
+        lossFcn = @(Y1,Y2,Y3,T1,T2,T3) mse(Y1,T1)/3 + mse(Y2,T2)/3 + mse(Y3,T3)/3;
+    elseif strcmp(ann.cp,'h12')
         lossFcn = @(Y1,Y2,T1,T2) 0.5*mse(Y1,T1) + 0.5*mse(Y2,T2);
     else
         lossFcn = @(Y1,T1) 1*mse(Y1,T1) ;
