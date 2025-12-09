@@ -1,7 +1,7 @@
 %% *GENERATION OF STRONG GROUND MOTION SIGNALS BY COUPLING PHYSICS-BASED ANALYSIS WITH ARTIFICIAL NEURAL NETWORKS*
-% Victor Hernández (vmh5@hi.is)
-% DICA - Politecnico di Milano
-% July 2025
+% Victor Hernández-Aguirre (victorh@hi.is)
+% University of Iceland / Politecnico di Milano
+% Ver. July 2025
 
 clc
 clear
@@ -24,15 +24,15 @@ n_LoopsANN = 1; %number of trained nets before choosing the best one
 add_distance = 'True';
 add_m = 'True';
 add_lndistance = 'True';
-separate_classes = 'False';
+separate_classes = 'True';
 
 %% *DEFINE TRAIN METADATA (CUSTOMIZE)*
 
 % *ANN METADATA ann*
 % _number of ann
-ann.trn.nr = 3; %2 for horizontal (h12) and vertical (ud) components 
+ann.trn.nr = 1; %2 for horizontal (h12) and vertical (ud) components 
 % _corner periods_
-TnC = [0.6,0.6,0.6];
+TnC = [0.70,0.6,0.6];
 % _direction (ud=vertical;h12=both horizontal)
 cp  = {'h12v','h12','ud'};
 % _site class (ALL,AB,CD)_
